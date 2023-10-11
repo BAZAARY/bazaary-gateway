@@ -1,58 +1,40 @@
-import { ApolloServer } from "@apollo/server";
-import { startStandaloneServer } from "@apollo/server/standalone";
+const { ApolloServer } = require("apollo-server");
+const { ApolloGateway, IntrospectAndCompose } = require("@apollo/gateway");
 
-// A schema is a collection of type definitions (hence "typeDefs")
-// that together define the "shape" of queries that are executed against
-// your data.
-const typeDefs = `#graphql
-  # Comments in GraphQL strings (such as this one) start with the hash (#) symbol.
-
-  # This "Book" type defines the queryable fields for every book in our data source.
-  type Book {
-    title: String
-    author: String
-  }
-
-  # The "Query" type is special: it lists all of the available queries that
-  # clients can execute, along with the return type for each. In this
-  # case, the "books" query returns an array of zero or more Books (defined above).
-  type Query {
-    books: [Book]
-  }
-`;
-
-const books = [
-	{
-		title: "The Awakening",
-		author: "Kate Chopin",
-	},
-	{
-		title: "City of Glass",
-		author: "Paul Auster",
-	},
-];
-
-// Resolvers define how to fetch the types defined in your schema.
-// This resolver retrieves books from the "books" array above.
-const resolvers = {
-	Query: {
-		books: () => books,
-	},
-};
-
-// The ApolloServer constructor requires two parameters: your schema
-// definition and your set of resolvers.
-const server = new ApolloServer({
-	typeDefs,
-	resolvers,
+const supergraphSdl = new IntrospectAndCompose({
+	// This entire subgraph list is optional when running in managed federation
+	// mode, using Apollo Studio as the source of truth.  In production,
+	// using a single source of truth to compose a schema is recommended and
+	// prevents composition failures at runtime using schema validation using
+	// real usage-based metrics.
+	subgraphs: [
+		{ name: "authentication", url: "http://localhost:9000/graphql" },
+		{ name: "roma", url: "http://localhost:9500/graphql" },
+		// { name: "products", url: "http://localhost:4003/graphql" },
+		// { name: "inventory", url: "http://localhost:4004/graphql" },
+	],
 });
 
-// Passing an ApolloServer instance to the `startStandaloneServer` function:
-//  1. creates an Express app
-//  2. installs your ApolloServer instance as middleware
-//  3. prepares your app to handle incoming requests
-const { url } = await startStandaloneServer(server, {
-	listen: { port: 4000 },
+const gateway = new ApolloGateway({
+	supergraphSdl,
+	// Experimental: Enabling this enables the query plan view in Playground.
+	__exposeQueryPlanExperimental: false,
 });
 
-console.log(`🚀  Server ready at: ${url}`);
+(async () => {
+	const server = new ApolloServer({
+		gateway,
+
+		// Apollo Graph Manager (previously known as Apollo Engine)
+		// When enabled and an `ENGINE_API_KEY` is set in the environment,
+		// provides metrics, schema management and trace reporting.
+		engine: false,
+
+		// Subscriptions are unsupported but planned for a future Gateway version.
+		subscriptions: false,
+	});
+
+	server.listen().then(({ url }) => {
+		console.log(`⭐ API GATEWAY Server ready at ${url}`);
+	});
+})();
