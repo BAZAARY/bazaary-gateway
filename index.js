@@ -12,9 +12,10 @@ const supergraphSdl = new IntrospectAndCompose({
 			name: "authentication",
 			url: "https://authentication-bazaary.vercel.app/graphql",
 		},
-		{ name: "roma", url: "http://localhost:9500/graphql" },
-		// { name: "products", url: "http://localhost:4003/graphql" },
-		// { name: "inventory", url: "http://localhost:4004/graphql" },
+		{
+			name: "catalogmicroservicegraphql",
+			url: "https://catalogmicroservicegraphql.onrender.com/graphql"
+		}
 	],
 });
 
