@@ -13,24 +13,26 @@ const service2URL = "https://catalogmicroservicegraphql.onrender.com/graphql";
 // Configura el servidor Apollo Gateway
 const gateway = new ApolloGateway({
 	serviceList: [
-	  { name: 'service1', url: service1URL },
-	  { name: 'service2', url: service2URL },
+		{ name: 'service1', url: service1URL },
+		{ name: 'service2', url: service2URL },
 	],
-  });
-  
-  async function startApolloServer() {
+});
+
+async function startApolloServer() {
 	const server = new ApolloServer({
-	  gateway,
-	  subscriptions: false,
+		gateway,
+		subscriptions: false,
 	});
-  
+
 	await server.start();
-  
+
 	server.applyMiddleware({ app });
-  }
-  
-  startApolloServer().then(() => {
+}
+
+startApolloServer().then(() => {
 	app.listen(PORT, () => {
-	  console.log(`Server is running on port ${PORT}`);
+		console.log(`Server is running on port ${PORT}`);
 	});
-  });
+});
+
+module.exports = app
