@@ -7,7 +7,6 @@ import http from 'http';
 
 const app = express();
 app.use(express.json());
-const httpServer = http.createServer(app);
 const PORT = process.env.PORT || 9000; // Allow configuring the port through an environment variable
 
 // URLs of your Apollo microservices
@@ -22,7 +21,9 @@ const gateway = new ApolloGateway({
   ],
 });
 
-async function startApolloServer() {
+const httpServer = http.createServer(app);
+
+const startApolloServer = async (app, httpServer) => {
   const server = new ApolloServer({
     gateway,
     subscriptions: false,
